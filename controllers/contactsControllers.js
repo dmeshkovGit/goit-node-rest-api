@@ -17,7 +17,7 @@ export const getOneContact = async (req, res, next) => {
     const contact = await Contact.findById(id);
     
     if (contact === null) {
-        next(HttpError(404))
+        next(HttpError(400))
     }
 
     res.status(200).json(contact)
@@ -32,7 +32,7 @@ export const deleteContact = async (req, res, next) => {
     const { id } = req.params;
     const deletedContact = await Contact.findByIdAndDelete(id);
     if (deletedContact === null) {
-    next(HttpError(404))
+    next(HttpError(400))
     }
     res.status(200).json(deletedContact); 
      } catch (error) {
@@ -66,10 +66,10 @@ export const updateContact = async (req, res, next) => {
     }
     const { id } = req.params;
     
-    const updatedContact = await Contact.findByIdAndUpdate(id, params, { returnOriginal: false });
+    const updatedContact = await Contact.findByIdAndUpdate(id, params, { new: true });
          
     if (updatedContact === null) {
-    next(HttpError(404))
+    next(HttpError(400))
     }
     res.status(200).json(updatedContact);  
     } catch (error) {
@@ -82,9 +82,9 @@ export const updateStatusContact = async (req, res, next) => {
     const params = req.body;
     const { id } = req.params;
     
-    const updatedContact = await Contact.findByIdAndUpdate(id, params, { returnOriginal: false });
+    const updatedContact = await Contact.findByIdAndUpdate(id, params, { new: true });
     if (updatedContact === null) {
-    next(HttpError(404))
+    next(HttpError(400))
     }
     res.status(200).json(updatedContact);  
     } catch (error) {
