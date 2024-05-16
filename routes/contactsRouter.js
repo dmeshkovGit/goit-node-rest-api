@@ -8,20 +8,21 @@ import {
   updateStatusContact
 } from "../controllers/contactsControllers.js";
 import validateBody from "../helpers/validateBody.js";
+import idValidation from "../middlevares/idValidation.js";
 import { createContactSchema, updateContactSchema, updateStatusContactSchema } from "../schemas/contactsSchemas.js";
 
 const contactsRouter = express.Router();
 
 contactsRouter.get("/", getAllContacts);
 
-contactsRouter.get("/:id", getOneContact);
+contactsRouter.get("/:id", idValidation, getOneContact);
 
-contactsRouter.delete("/:id", deleteContact);
+contactsRouter.delete("/:id", idValidation, deleteContact);
 
 contactsRouter.post("/", validateBody(createContactSchema), createContact);
 
-contactsRouter.put("/:id", validateBody(updateContactSchema), updateContact);
+contactsRouter.put("/:id", idValidation, validateBody(updateContactSchema), updateContact);
 
-contactsRouter.patch("/:id/favorite", validateBody(updateStatusContactSchema), updateStatusContact)
+contactsRouter.patch("/:id/favorite", idValidation,validateBody(updateStatusContactSchema), updateStatusContact)
 
 export default contactsRouter;
