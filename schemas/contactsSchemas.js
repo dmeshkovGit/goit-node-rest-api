@@ -15,3 +15,9 @@ export const updateContactSchema = Joi.object({
 export const updateStatusContactSchema = Joi.object({
     favorite: Joi.boolean().required()
 })
+
+export const contactsReqBodySchema = Joi.object({
+    page: Joi.number().min(1),
+    limit: Joi.number().min(1),
+    favorite: Joi.boolean()
+})

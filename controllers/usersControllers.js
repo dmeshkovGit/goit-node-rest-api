@@ -1,9 +1,8 @@
-import { trusted } from "mongoose";
 import HttpError from "../helpers/HttpError.js";
 import Users from "../models/users.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { json } from "express";
+
 
 
 export const registerUser = async (req, res, next) => {
@@ -101,4 +100,24 @@ export const getUser = async (req, res, next) => {
     }
 
 
+};
+
+export const updateUserSub = async (req, res, next) => {
+    const userId = req.user.id;
+    const newSubscription = req.body
+
+    try {
+        
+        const {name, email, subscription} = await Users.findByIdAndUpdate(userId, newSubscription, {new: true})
+        
+        res.status(200).json({
+            user: {
+                name,
+                email,
+                subscription
+        }})
+
+    } catch (error) {
+        next(error)
+    }
 };

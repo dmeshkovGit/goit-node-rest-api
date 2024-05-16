@@ -33,7 +33,7 @@ export const getOneContact = async (req, res, next) => {
     const contact = await Contact.findOne({_id: id, owner: req.user.id});
     
     if (contact === null) {
-        next(HttpError(400))
+        next(HttpError(404))
          };
 
 
@@ -51,7 +51,7 @@ export const deleteContact = async (req, res, next) => {
          const deletedContact = await Contact.findOneAndDelete({_id: id, owner: req.user.id});
     
          if (deletedContact === null) {
-          next(HttpError(400))
+          next(HttpError(404))
          };
 
          res.status(200).json(deletedContact); 
@@ -93,7 +93,7 @@ export const updateContact = async (req, res, next) => {
     const updatedContact = await Contact.findOneAndUpdate({_id: id, owner: req.user.id}, params, { new: true });
          
     if (updatedContact === null) {
-    next(HttpError(400))
+    next(HttpError(404))
     }
     res.status(200).json(updatedContact);  
     } catch (error) {
@@ -108,7 +108,7 @@ export const updateStatusContact = async (req, res, next) => {
     
         const updatedContact = await Contact.findOneAndUpdate({ _id: id, owner: req.user.id }, params, { new: true });
         if (updatedContact === null) {
-            next(HttpError(400))
+            next(HttpError(404))
         }
         res.status(200).json(updatedContact);
     } catch (error) {
