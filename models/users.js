@@ -1,10 +1,6 @@
 import mongoose from "mongoose"
 
 const userSchema = mongoose.Schema({
-  name: {
-    type: String,
-    requireed: [true, 'Name is required']
-  },
   password: {
     type: String,
     required: [true, 'Password is required'],
