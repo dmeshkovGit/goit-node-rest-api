@@ -1,7 +1,11 @@
-import HttpError from "../helpers/HttpError.js";
+import HttpError from "../helpers/HttpError.js"
 import Users from "../models/users.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import gravatar from "gravatar"
+import * as fs from "node:fs/promises"
+import path from "node:path"
+import Jimp from "jimp"
 
 
 
@@ -19,16 +23,18 @@ export const registerUser = async (req, res, next) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const {subscription} = await Users.create({
+    const newUser = await Users.create({
             name,
             email: emailInLowerCase,
             password: passwordHash,
+            avatarURL: gravatar.url(emailInLowerCase, {s: '250', r: 'pg', d: 'retro'})
     });
         
         res.status(201).json({
         user:{
                 email: emailInLowerCase,
-                subscription
+                subscription: newUser.subscription,
+                avatar: newUser.avatarURL
              }
         })
 
@@ -120,4 +126,29 @@ export const updateUserSub = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
+};
+
+export const updateAvatar = async (req, res, next) => {
+
+    if (req.file === undefined) {
+        next(HttpError(400))
+    }
+
+    const userId = req.user.id;
+    
+    try {
+        const image = await Jimp.read(req.file.path);
+        image.resize(250, 250).write(req.file.path);
+
+        await fs.rename(req.file.path, path.resolve("public/avatars", req.file.filename));
+
+        const user = await Users.findByIdAndUpdate(userId,{avatarURL: `/avatars/${req.file.filename}`},{new: true});
+         
+        res.status(200).json({ avatarURL: user.avatarURL });
+
+
+    } catch (error) {
+        next(error)
+    }
+    
 };
