@@ -6,6 +6,8 @@ import gravatar from "gravatar"
 import * as fs from "node:fs/promises"
 import path from "node:path"
 import Jimp from "jimp"
+import crypto from "node:crypto"
+import sendMail from "../helpers/mail.js"
 
 
 
@@ -22,13 +24,26 @@ export const registerUser = async (req, res, next) => {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const verifyToken = crypto.randomUUID();
 
     const newUser = await Users.create({
             name,
             email: emailInLowerCase,
             password: passwordHash,
-            avatarURL: gravatar.url(emailInLowerCase, {s: '250', r: 'pg', d: 'retro'})
+        avatarURL: gravatar.url(emailInLowerCase, { s: '250', r: 'pg', d: 'retro' }),
+            verificationToken: verifyToken,
+
     });
+        
+        const verifyMessage = {
+            from: '"Contacts App" <contaccts.app@mail.com>',
+            to: emailInLowerCase,
+            subject: "Email verification",
+            html: `To confirm your email please click on the <a href="http://localhost:3000/api/users/verify/${verifyToken}">link</a>`,
+      text: `To confirm your email please open the link http://localhost:3000/api/users/verify/${verifyToken}`,
+        };
+
+        sendMail(verifyMessage);
         
         res.status(201).json({
         user:{
@@ -42,6 +57,64 @@ export const registerUser = async (req, res, next) => {
     } catch (error) {
         next(error)
     }
+};
+
+export const verifyUser = async (req, res, next) => {
+
+    const userToken = req.params.verificationToken;
+
+    try {
+    
+    const user = await Users.findOneAndUpdate({ verificationToken: userToken }, {
+        verify: true,
+        verificationToken: null
+    });
+        console.log(user);
+    if (user === null) {
+        return next(HttpError(404));
+    };
+        
+    } catch (error) {
+        next(error)
+    };
+    
+    res.status(200).json({
+        message: 'Verification successful'
+    });
+
+};
+
+export const handleVerify = async (req, res, next) => {
+    const { email } = req.body;
+    
+    try {
+        const user = await Users.findOne({ email: email });
+        
+        if (user === null) {
+            return next(HttpError(400, "invalid email"))
+        };
+
+        if (user.verify === true) {
+            return next(HttpError(400, "Verification has already been passed"))
+        };
+
+        const verifyMessage = {
+            from: '"Contacts App" <contaccts.app@mail.com>',
+            to: email,
+            subject: "Email verification",
+            html: `To confirm your email please click on the <a href="http://localhost:3000/api/users/verify/${user.verificationToken}">link</a>`,
+            text: `To confirm your email please open the link http://localhost:3000/api/users/verify/${user.verificationToken}`,
+    };
+        
+        sendMail(verifyMessage);
+
+        res.status(200).json({
+            "message": "Verification email sent"
+        });
+
+    } catch (error) {
+        next(error)
+    };
 };
 
 export const loginUser = async (req, res, next) => {
@@ -59,6 +132,10 @@ export const loginUser = async (req, res, next) => {
         if (isPasswordMatch === false) {
             next(HttpError(401, "Email or password is wrong"))
         }
+
+      if (user.verify === false) {
+          return next(HttpError(401,"Please verify your email"));
+    }
 
         const token = jwt.sign({
             id: user._id,
